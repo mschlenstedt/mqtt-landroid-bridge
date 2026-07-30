@@ -297,7 +297,15 @@ class Worx extends EventEmitter{
             return;
         }
 
-        this.userData = await this.apiRequest("users/me", false);
+        // Worx API changed in 2025/2026: endpoint users/me now returns HTTP 405.
+        // user_id and mqtt_endpoint are already part of the product-items response,
+        // therefore we skip users/me completely. The endpoint is read in connectMqtt().
+        if (this.deviceArray[0].user_id == null) {
+            this.log.error(`Cannot read user_id!!! Please create a issue!`);
+            return;
+        }
+        this.userData = { id: this.deviceArray[0].user_id };
+        this.log.info(`MQTT User ID: ${this.userData.id}`);
         this.connectMqtt();
     }
 
@@ -308,6 +316,7 @@ class Worx extends EventEmitter{
             if (this.deviceArray[0].mqtt_endpoint == null) {
                 this.log.warn(`Cannot read mqtt_endpoint use default`);
             }
+            this.log.info(`Using mqtt endpoint ${mqttEndpoint}`);
             const headers = this.createWebsocketHeader();
             let region = "eu-west-1";
 
